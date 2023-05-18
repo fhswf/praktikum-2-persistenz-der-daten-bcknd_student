@@ -19,18 +19,20 @@ export default class DB {
     }
 
     queryById(id) {
-        // TODO: Implement queryById
+        const objectId = new ObjectId(id);
+        return collection.findOne({ '_id': objectId });  
     }
 
     update(id, order) {
-        // TODO: Implement update
+        const objectId = new ObjectId(id);
+        collection.updateOne({ '_id': id }, { $set: order});
     }
 
     delete(id) {
-        // TODO: Implement delete
+        collection.deleteOne({ '_id': id });
     }
 
     insert(order) {
-        // TODO: Implement insert
+        collection.insertOne(order);
     }
 }

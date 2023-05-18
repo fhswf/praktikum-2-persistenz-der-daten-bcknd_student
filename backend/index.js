@@ -29,10 +29,41 @@ app.get('/todos', async (req, res) => {
 // YOUR CODE HERE
 //
 // Implement the following routes:
-// GET /todos/:id
+
+
+//GET /todos/:id
+app.get('/todos/:id', async(req, res) => {
+    const id = req.params.id;
+    try {
+        const todo = await db.queryById(id)
+        console.log(todo)
+        res.json(todo)
+    } catch (error) {
+        console.log(error);
+        }
+});
+
 // POST /todos
+app.post('/todos', async(req, res) => {
+    const result = await db.insert(req.body)
+    console.log(result)
+    res.send(result)
+});
+
+
 // PUT /todos/:id
+app.put('/todos/:id', async(req, res) => {
+    const ret = await db.update(req.params.id, req.body)
+    res.send(ret)
+});
+
 // DELETE /todos/:id
+app.delete('/todos/:id', async(req, res) => {
+    let ret = await db.delete(req.params.id)
+    res.send(ret)
+});
+
+
 
 
 initDB()
@@ -40,5 +71,4 @@ initDB()
         app.listen(PORT, () => {
             console.log(`Server listening on port ${PORT}`);
         })
-    })
-
+});
