@@ -1,10 +1,18 @@
 import express from 'express';
 import DB from './db.js'
+import bodyParser from "body-parser";
+
+//const bodyParser = require('body-parser');
 
 const PORT = process.env.PORT || 3000;
 
 /** Zentrales Objekt für unsere Express-Applikation */
 const app = express();
+
+// app.use(bodyParser.json()); 
+// app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use(express.json());
 
 /** global instance of our database */
 let db = new DB();
@@ -22,6 +30,7 @@ async function initDB() {
  */
 app.get('/todos', async (req, res) => {
     let todos = await db.queryAll();
+    console.log('Allgemeines GET')
     res.send(todos);
 });
 
@@ -34,6 +43,7 @@ app.get('/todos', async (req, res) => {
 //GET /todos/:id
 app.get('/todos/:id', async(req, res) => {
     const id = req.params.id;
+    console.log('Check der id: ' + id)
     try {
         const todo = await db.queryById(id)
         console.log(todo)
@@ -45,22 +55,42 @@ app.get('/todos/:id', async(req, res) => {
 
 // POST /todos
 app.post('/todos', async(req, res) => {
-    const result = await db.insert(req.body)
-    console.log(result)
-    res.send(result)
+    try {
+        const result = await db.insert(req.body)
+        console.log('POST result')
+        console.log(result)
+        res.send(result)
+    } catch (error) {
+        console.log(error);
+        }
+
 });
 
 
 // PUT /todos/:id
 app.put('/todos/:id', async(req, res) => {
-    const ret = await db.update(req.params.id, req.body)
-    res.send(ret)
+    const id = req.params.id;
+    console.log('Check der id: ' + id)
+    try {
+        const ret = await db.update(id, req.body)
+        console.log('UPDATE by id')
+        res.send(ret)
+    } catch (error) {
+        console.log(error);
+        }
 });
 
 // DELETE /todos/:id
 app.delete('/todos/:id', async(req, res) => {
-    let ret = await db.delete(req.params.id)
-    res.send(ret)
+    const id = req.params.id;
+    console.log('Check der id: ' + id)
+    try {
+        let ret = await db.delete(id)
+        console.log('DELETE by id')  
+        res.send(ret)
+        } catch (error) {
+            console.log(error);
+            }
 });
 
 

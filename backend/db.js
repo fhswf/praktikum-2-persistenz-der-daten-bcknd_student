@@ -1,4 +1,5 @@
 import { MongoClient } from 'mongodb';
+import { ObjectId } from 'mongodb'
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/todos';
 const MONGO_DB = process.env.MONGO_DB || 'todos';
@@ -25,11 +26,12 @@ export default class DB {
 
     update(id, order) {
         const objectId = new ObjectId(id);
-        collection.updateOne({ '_id': id }, { $set: order});
+        collection.updateOne({ '_id': objectId }, { $set: order});
     }
 
     delete(id) {
-        collection.deleteOne({ '_id': id });
+        const objectId = new ObjectId(id);
+        collection.deleteOne({ '_id': objectId });
     }
 
     insert(order) {
