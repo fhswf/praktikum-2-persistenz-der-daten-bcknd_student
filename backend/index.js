@@ -8,16 +8,8 @@ import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
 //Validation
-const { check, validationResult } = require('express-validator');
-
-const todoValidationRules = [
-  check('title')
-    .notEmpty()
-    .withMessage('Titel darf nicht leer sein')
-    .isLength({ min: 3 })
-    .withMessage('Titel muss mindestens 3 Zeichen lang sein'),
-];
-
+//const { check, validationResult } = require('express-validator');
+import { check, validationResult } from 'express-validator'
 
 
 //const bodyParser = require('body-parser');
@@ -57,58 +49,88 @@ passport.use(
 );
 app.use(passport.initialize());
 
-
 //Swagger:
 
 const router = express.Router()
 const swaggerOptions = {
-    swaggerDefinition: {
+  swaggerDefinition: {
       openapi: '3.0.0',
       info: {
-        title: 'Todo API',
-        version: '1.0.0',
-        description: 'Todo API Dokumentation',
+          title: 'Todo API',
+          version: '1.0.0',
+          description: 'Todo API Dokumentation',
       },
       servers: [
-        {
-          url: 'http://localhost:3000',
+          {
+              url: 'http://localhost:3000',
+
+          },
+          {
+            url: 'https://mfreiwalddev-opulent-space-adventure-ggxq499rq74fwpxr-3000.preview.app.github.dev/',
+            
         },
       ],
-    },
-    apis: ['./index.js'], 
-    components: {
-        schemas: {
-          Todo: {
-            type: 'object',
-            properties: {
-              title: {
-                type: 'string',
+      components: {
+          schemas: {
+              Todo: {
+                  type: 'object',
+                  properties: {
+                      _id: {
+                          type: 'string',
+                          example: '6439519dadb77c080671a573',
+                      },
+                      title: {
+                          type: 'string',
+                          example: 'Für die Klausur Webentwicklung lernen',
+                      },
+                      due: {
+                          type: 'string',
+                          example: '2023-01-14T00:00:00.000Z',
+                      },
+                      status: {
+                          type: 'integer',
+                      },
+                  },
               },
-              due: {
-                type: 'string',
-              },
-              status: {
-                type: 'integer',
-              },
-            },
           },
-        },
-        securitySchemes: {
-          bearerAuth: {
-            type: 'http',
-            scheme: 'bearer',
-            bearerFormat: 'JWT',
-          }
-        },
+          securitySchemes: {
+              bearerAuth: {
+                  type: 'http',
+                  scheme: 'bearer',
+                  bearerFormat: 'JWT',
+              }
+          },
       },
       security: [{
-        bearerAuth: []
-      }]
-  };
+          bearerAuth: []
+      }],
 
-  const swaggerDocs = swaggerJsdoc(swaggerOptions);
+  },
+  apis: ['./index.js'],
+};
 
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+const swaggerDocs = swaggerJsdoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
+
+
+//Validation:
+
+const todoValidationRules = [
+    check('title')
+      .notEmpty()
+      .withMessage('Titel darf nicht leer sein')
+      .isLength({ min: 3 })
+      .withMessage('Titel muss mindestens 3 Zeichen lang sein'),
+  ];
+
+
+
+//Frontend:
+
+app.use(express.static('../frontend'));
+
+
 
 
 
@@ -140,17 +162,17 @@ async function initDB() {
 *              items:
 *                $ref: '#/components/schemas/Todo'
 */
-router.get('/todos', async (req, res) => {
+app.get('/todos', async (req, res) => {
     let todos = await db.queryAll();
     console.log('Allgemeines GET')
     res.send(todos);
 });
 
-app.get('/todos', /*passport.authenticate('jwt',  { session: false }), */ async (req, res) => {
-    let todos = await db.queryAll();
-    console.log('Allgemeines GET')
-    res.send(todos);
-});
+// app.get('/todos', /*passport.authenticate('jwt',  { session: false }), */ async (req, res) => {
+//     let todos = await db.queryAll();
+//     console.log('Allgemeines GET')
+//     res.send(todos);
+// });
 
 //
 // YOUR CODE HERE
@@ -175,7 +197,7 @@ app.get('/todos', /*passport.authenticate('jwt',  { session: false }), */ async 
 *              items:
 *                $ref: '#/components/schemas/Todo'
 */
-router.get('/todos/:id', async (req, res) => {
+app.get('/todos/:id', async (req, res) => {
     const id = req.params.id;
     console.log('Check der id: ' + id)
     try {
@@ -187,20 +209,6 @@ router.get('/todos/:id', async (req, res) => {
         }
 });
 
-
-
-
-app.get('/todos/:id', async(req, res) => {
-    const id = req.params.id;
-    console.log('Check der id: ' + id)
-    try {
-        const todo = await db.queryById(id)
-        console.log(todo)
-        res.json(todo)
-    } catch (error) {
-        console.log(error);
-        }
-});
 
 // POST /todos
 
@@ -220,19 +228,8 @@ app.get('/todos/:id', async(req, res) => {
 *              items:
 *                $ref: '#/components/schemas/Todo'
 */
-router.post('/todos', todoValidationRules, async(req, res) => {
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ errors: errors.array() });
-  }else{
-      const result = await db.insert(req.body)
-      console.log('POST result')
-      console.log(result)
-      res.send(result)
-    } 
-
-});
-
 app.post('/todos', todoValidationRules, async(req, res) => {
+  const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(422).json({ errors: errors.array() });
   }else{
@@ -243,6 +240,8 @@ app.post('/todos', todoValidationRules, async(req, res) => {
     } 
 
 });
+
+
 
 /**
 * @swagger
@@ -260,30 +259,20 @@ app.post('/todos', todoValidationRules, async(req, res) => {
 *              items:
 *                $ref: '#/components/schemas/Todo'
 */
-router.put('/todos/:id', async(req, res) => {
+app.put('/todos/:id', todoValidationRules, async(req, res) => {
+    console.log('Start von PUT')
     const id = req.params.id;
     console.log('Check der id: ' + id)
-    try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(422).json({ errors: errors.array() });
+      }else{
         const ret = await db.update(id, req.body)
         console.log('UPDATE by id')
         res.send(ret)
-    } catch (error) {
-        console.log(error);
-        }
+        } 
 });
 
-// PUT /todos/:id
-app.put('/todos/:id', async(req, res) => {
-    const id = req.params.id;
-    console.log('Check der id: ' + id)
-    try {
-        const ret = await db.update(id, req.body)
-        console.log('UPDATE by id')
-        res.send(ret)
-    } catch (error) {
-        console.log(error);
-        }
-});
 
 
 /**
@@ -302,21 +291,6 @@ app.put('/todos/:id', async(req, res) => {
 *              items:
 *                $ref: '#/components/schemas/Todo'
 */
-router.delete('/todos/:id', async(req, res) => {
-    const id = req.params.id;
-    console.log('Check der id: ' + id)
-    try {
-        let ret = await db.delete(id)
-        console.log('DELETE by id')  
-        res.send(ret)
-        } catch (error) {
-            console.log(error);
-            }
-});
-
-
-
-// DELETE /todos/:id
 app.delete('/todos/:id', async(req, res) => {
     const id = req.params.id;
     console.log('Check der id: ' + id)
@@ -332,9 +306,14 @@ app.delete('/todos/:id', async(req, res) => {
 
 
 
+
+
+let server;
 initDB()
     .then(() => {
-        app.listen(PORT, () => {
+        server = app.listen(PORT, () => {
             console.log(`Server listening on port ${PORT}`);
         })
-});
+    })
+
+export { app, server, db }
